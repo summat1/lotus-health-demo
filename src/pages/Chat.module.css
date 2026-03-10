@@ -1,0 +1,317 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+}
+
+/* Data bar */
+.dataBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border);
+  justify-content: center;
+}
+
+.dataBarDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--purple);
+  animation: pulse-dot 2s ease infinite;
+  flex-shrink: 0;
+}
+
+.dataBarSpinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--gray-300);
+  border-top-color: var(--purple);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.dataBarText {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+/* Main layout */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Messages */
+.messages {
+  flex: 1;
+  padding: 28px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+}
+
+.messageWrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.messageUser {
+  flex-direction: row-reverse;
+}
+
+.messageAssistant {
+  flex-direction: row;
+}
+
+.assistantDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--purple);
+  flex-shrink: 0;
+  margin-top: 2px;
+  position: relative;
+  animation: pulse-dot 3s ease infinite;
+}
+
+.assistantDot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--purple);
+  opacity: 0;
+  animation: pulse-ring 3s ease infinite;
+}
+
+.bubble {
+  max-width: 78%;
+  font-size: 15px;
+  line-height: 1.65;
+  padding: 12px 16px;
+  border-radius: 20px;
+}
+
+.bubbleAssistant {
+  background: transparent;
+  color: var(--black);
+  padding-left: 0;
+  border-radius: 0;
+}
+
+.bubbleUser {
+  background: var(--gray-100);
+  color: var(--black);
+  border-radius: 20px 20px 4px 20px;
+}
+
+/* Typing */
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 4px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--purple);
+  opacity: 0.4;
+  animation: bounce 1.2s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* Strava inline card */
+.stravaCard {
+  margin-left: 38px;
+}
+
+.stravaCardInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--gray-50);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  max-width: 400px;
+}
+
+.stravaIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: white;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stravaCardText {
+  flex: 1;
+}
+
+.stravaCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 2px;
+}
+
+.stravaCardDesc {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.stravaConnectBtn {
+  background: var(--black);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.stravaConnectBtn:hover {
+  opacity: 0.75;
+}
+
+/* Suggestions */
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 24px;
+}
+
+.suggestion {
+  text-align: left;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.suggestion:hover {
+  border-color: var(--purple-mid);
+  color: var(--black);
+  background: var(--gray-50);
+}
+
+/* Input area */
+.inputArea {
+  padding: 12px 0 28px;
+  border-top: 1px solid var(--border);
+}
+
+.disclaimer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--gray-300);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.disclaimerIcon {
+  font-size: 11px;
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: var(--gray-50);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 10px 10px 10px 18px;
+  transition: border-color 0.15s;
+}
+
+.inputRow:focus-within {
+  border-color: var(--gray-300);
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: var(--black);
+  resize: none;
+  max-height: 120px;
+  line-height: 1.5;
+  padding: 2px 0;
+}
+
+.input::placeholder {
+  color: var(--gray-300);
+}
+
+.voiceBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--black);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.voiceBtn:hover {
+  opacity: 0.75;
+}
+
+.sendBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.sendBtn:hover {
+  opacity: 0.75;
+}
+
+.sendBtn:disabled {
+  opacity: 0.4;
+}
