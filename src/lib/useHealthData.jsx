@@ -119,6 +119,13 @@ export function useHealthData() {
     setPromptsVisible({})
   }, [])
 
+  // Show Garmin prompt if Garmin isn't connected (used after Strava OAuth return)
+  const showGarminIfNeeded = useCallback(() => {
+    if (!INTEGRATIONS.garmin.checkConnected()) {
+      showPrompt('garmin')
+    }
+  }, [showPrompt])
+
   // Parse auth tokens from AI reply and trigger prompts
   const processReply = useCallback((reply) => {
     let cleaned = reply
@@ -208,6 +215,7 @@ export function useHealthData() {
     connectInline,
     pendingPrompts,
     hideAllPrompts,
+    showGarminIfNeeded,
 
     // Loading
     isLoading,
