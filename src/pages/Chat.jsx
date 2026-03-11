@@ -1,19 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import Nav from '../components/Nav'
 import { sendMessage } from '../lib/claude'
 import { isStravaConnected, fetchRecentActivities, getStravaAuthUrl } from '../lib/strava'
 import styles from './Chat.module.css'
 
 const SUGGESTED_PROMPTS = [
-  "My knee has been sore — should I train tomorrow?",
-  "Am I overtraining based on my recent workouts?",
-  "How's my recovery looking this week?",
+  "My knee is hurting really badly, what should I do?",
+  "I'm having mild chest and arm pain",
+  "I've got an awful headache"
 ]
 
 const WELCOME = {
   role: 'assistant',
-  content: "Hey Shivesh — I'm your Lotus health assistant. I can help you understand your body, flag recovery concerns, and think through injury risk based on your training data.\n\nWhat's on your mind?",
+  content: "Hey Shivesh — I'm your Lotus health assistant. How can I help?",
   id: 'welcome',
 }
 
@@ -138,8 +139,8 @@ export default function Chat() {
               <div className={styles.stravaCardInner}>
                 <div className={styles.stravaIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116z" fill="#FC4C02"/>
-                    <path d="M11.094 13.828l2.089 4.116 2.204-4.116H13.12L11.094 9.828 9.066 13.828h2.028z" fill="#FC4C02" opacity="0.7"/>
+                    <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116z" fill="#FC4C02" />
+                    <path d="M11.094 13.828l2.089 4.116 2.204-4.116H13.12L11.094 9.828 9.066 13.828h2.028z" fill="#FC4C02" opacity="0.7" />
                   </svg>
                 </div>
                 <div className={styles.stravaCardText}>
@@ -192,14 +193,14 @@ export default function Chat() {
                 disabled={loading}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
             ) : (
               <button className={styles.voiceBtn}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="white"/>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="white" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
                 Voice
               </button>
@@ -219,12 +220,13 @@ function MessageBubble({ message }) {
         <div className={styles.assistantDot} />
       )}
       <div className={`${styles.bubble} ${isUser ? styles.bubbleUser : styles.bubbleAssistant}`}>
-        {message.content.split('\n').map((line, i) => (
-          <span key={i}>
-            {line}
-            {i < message.content.split('\n').length - 1 && <br />}
-          </span>
-        ))}
+        {isUser ? (
+          message.content
+        ) : (
+          <div className={styles.markdown}>
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   )
