@@ -19,13 +19,26 @@ const WELCOME = {
 }
 
 export default function Chat() {
-  const [messages, setMessages] = useState([WELCOME])
+  const [messages, setMessages] = useState(() => {
+    // Restore session if returning from Strava OAuth
+    try {
+      const saved = sessionStorage.getItem('lotus_chat_session')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 1) return parsed
+      }
+    } catch {}
+    return [WELCOME]
+  })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [stravaConnected, setStravaConnected] = useState(false)
   const [stravaActivities, setStravaActivities] = useState(null)
   const [showStravaPrompt, setShowStravaPrompt] = useState(false)
   const [fetchingStrava, setFetchingStrava] = useState(false)
+  const [resumedFromStrava, setResumedFromStrava] = useState(() => {
+    return !!sessionStorage.getItem('lotus_chat_session')
+  })
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
   const navigate = useNavigate()
@@ -41,6 +54,16 @@ export default function Chat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading, showStravaPrompt])
+
+  // After Strava data loads and we resumed from OAuth, auto-continue the conversation
+  useEffect(() => {
+    if (resumedFromStrava && stravaActivities && stravaActivities.length > 0 && !loading) {
+      sessionStorage.removeItem('lotus_chat_session')
+      setResumedFromStrava(false)
+      // Auto-send a follow-up so Claude can analyze the data
+      handleSend('I just connected Strava — take a look at my recent activity data and continue helping me.')
+    }
+  }, [resumedFromStrava, stravaActivities])
 
   async function loadStravaData() {
     try {
@@ -98,6 +121,10 @@ export default function Chat() {
   }
 
   function handleStravaConnect() {
+    // Save chat session before redirecting so we can resume after OAuth
+    try {
+      sessionStorage.setItem('lotus_chat_session', JSON.stringify(messages))
+    } catch {}
     window.location.href = getStravaAuthUrl()
   }
 
