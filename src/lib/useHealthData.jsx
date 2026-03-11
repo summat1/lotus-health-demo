@@ -129,18 +129,25 @@ export function useHealthData() {
   // Parse auth tokens from AI reply and trigger prompts
   const processReply = useCallback((reply) => {
     let cleaned = reply
-    const triggered = []
+    let anyTriggered = false
 
+    // Strip all tokens from the reply text
     Object.entries(INTEGRATIONS).forEach(([key, integration]) => {
       if (cleaned.includes(integration.token)) {
         cleaned = cleaned.replace(integration.token, '').trim()
-        if (!integration.checkConnected()) {
-          triggered.push(key)
-        }
+        anyTriggered = true
       }
     })
 
-    triggered.forEach(key => showPrompt(key))
+    // If ANY integration was requested, show ALL unconnected ones
+    if (anyTriggered) {
+      Object.entries(INTEGRATIONS).forEach(([key, integration]) => {
+        if (!integration.checkConnected()) {
+          showPrompt(key)
+        }
+      })
+    }
+
     return cleaned
   }, [showPrompt])
 
