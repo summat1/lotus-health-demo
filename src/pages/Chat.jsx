@@ -217,7 +217,7 @@ export default function Chat() {
               className={`${styles.alertCard} ${styles[`alert_${alert.severity}`]} slide-up`}
               onClick={() => {
                 setDismissedAlerts(prev => [...prev, alert.type])
-                handleSend(`What's going on with my ${alert.title.toLowerCase()}?`)
+                handleSend(`I saw the alert about my ${alert.title.toLowerCase().replace(' detected', '')}. What should I know?`)
               }}
             >
               <div className={styles.alertIconWrap}>
