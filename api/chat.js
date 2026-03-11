@@ -46,7 +46,13 @@ For serious symptoms (chest pain + arm pain, difficulty breathing, head injuries
     systemPrompt += `\n\n## Strava Data Available
 Shivesh has connected Strava. Here are his last ${stravaActivities.length} activities:\n\n`
     systemPrompt += JSON.stringify(stravaActivities, null, 2)
-    systemPrompt += `\n\nNow you have real training data. Use it to give **specific, evidence-based insights**. Don't give generic advice — reference actual activities by name and date. Analyze:\n- **Training load spikes** — sudden jumps in distance/duration that correlate with the complaint\n- **Consecutive hard days** without adequate rest\n- **Heart rate anomalies** — elevated avg/max HR suggesting fatigue\n- **Timing** — when did the pain start relative to recent activity changes?\n- **Recovery gaps** — missing easy/rest days between intense sessions\n\nBe direct and specific: "Your 12km run on March 5 was double your usual distance — that kind of spike is a classic trigger for knee pain."`
+    systemPrompt += `\n\nNow you have real training data. IMPORTANT RULES for using this data:
+
+1. **Focus on the single most recent activity only.** You are a doctor reviewing a chart — zero in on the latest activity and how it relates to the complaint.
+2. **Lead with the insight, not a data dump.** Example: "I can see you did a 12km run 2 days ago — that's a big jump from your usual distance. That kind of spike is a classic trigger for knee pain."
+3. **Connect the dots** between the complaint and what you see — timing, intensity, whether it's unusual.
+4. **Ask a follow-up question** tied to what you found: "Did the pain start during that run or after?"
+5. Do NOT list or summarize multiple activities. Keep it focused and conversational.`
   }
 
   try {

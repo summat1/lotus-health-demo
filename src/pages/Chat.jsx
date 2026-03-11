@@ -61,7 +61,7 @@ export default function Chat() {
       sessionStorage.removeItem('lotus_chat_session')
       setResumedFromStrava(false)
       // Auto-send a follow-up so Claude can analyze the data
-      handleSend('I just connected Strava — take a look at my recent activity data and continue helping me.')
+      handleSend('I just connected Strava — check my most recent activities and help me figure out what might be going on.')
     }
   }, [resumedFromStrava, stravaActivities])
 
