@@ -231,12 +231,16 @@
   30% { transform: translateY(-5px); opacity: 1; }
 }
 
-/* Strava inline card */
-.stravaCard {
+/* Integration inline cards (Strava, Garmin, etc.) */
+.integrationCard {
   margin-left: 38px;
 }
 
-.stravaCardInner {
+.integrationCard + .integrationCard {
+  margin-top: 8px;
+}
+
+.integrationCardInner {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -247,11 +251,10 @@
   max-width: 400px;
 }
 
-.stravaIcon {
+.integrationIcon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: white;
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -259,23 +262,23 @@
   flex-shrink: 0;
 }
 
-.stravaCardText {
+.integrationCardText {
   flex: 1;
 }
 
-.stravaCardTitle {
+.integrationCardTitle {
   font-size: 14px;
   font-weight: 600;
   color: var(--black);
   margin-bottom: 2px;
 }
 
-.stravaCardDesc {
+.integrationCardDesc {
   font-size: 13px;
   color: var(--gray-500);
 }
 
-.stravaConnectBtn {
+.integrationConnectBtn {
   background: var(--black);
   color: white;
   font-size: 13px;
@@ -286,8 +289,9 @@
   transition: opacity 0.15s;
 }
 
-.stravaConnectBtn:hover {
+.integrationConnectBtn:hover {
   opacity: 0.75;
+
 }
 
 /* Suggestions */

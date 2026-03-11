@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import Nav from '../components/Nav'
 import { sendMessage } from '../lib/claude'
 import { isStravaConnected, fetchRecentActivities, getStravaAuthUrl } from '../lib/strava'
+import { isGarminConnected, connectGarmin, fetchGarminSleepData } from '../lib/garmin'
 import styles from './Chat.module.css'
 
 const SUGGESTED_PROMPTS = [
@@ -36,6 +37,10 @@ export default function Chat() {
   const [stravaActivities, setStravaActivities] = useState(null)
   const [showStravaPrompt, setShowStravaPrompt] = useState(false)
   const [fetchingStrava, setFetchingStrava] = useState(false)
+  const [garminConnected, setGarminConnected] = useState(false)
+  const [garminSleepData, setGarminSleepData] = useState(null)
+  const [showGarminPrompt, setShowGarminPrompt] = useState(false)
+  const [fetchingGarmin, setFetchingGarmin] = useState(false)
   const [resumedFromStrava, setResumedFromStrava] = useState(() => {
     return !!sessionStorage.getItem('lotus_chat_session')
   })
@@ -44,10 +49,15 @@ export default function Chat() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const connected = isStravaConnected()
-    setStravaConnected(connected)
-    if (connected && !stravaActivities) {
+    const sConnected = isStravaConnected()
+    setStravaConnected(sConnected)
+    if (sConnected && !stravaActivities) {
       loadStravaData()
+    }
+    const gConnected = isGarminConnected()
+    setGarminConnected(gConnected)
+    if (gConnected && !garminSleepData) {
+      loadGarminData()
     }
   }, [])
 
@@ -77,6 +87,27 @@ export default function Chat() {
     }
   }
 
+  async function loadGarminData() {
+    try {
+      setFetchingGarmin(true)
+      const sleep = await fetchGarminSleepData(7)
+      setGarminSleepData(sleep)
+    } catch (err) {
+      console.error('Failed to load Garmin data:', err)
+    } finally {
+      setFetchingGarmin(false)
+    }
+  }
+
+  async function handleGarminConnect() {
+    connectGarmin()
+    setGarminConnected(true)
+    setShowGarminPrompt(false)
+    await loadGarminData()
+    // Auto-send a message so the AI knows sleep data is now available
+    handleSend('I just connected my Garmin — you now have my recent sleep and recovery data.')
+  }
+
   function addMessage(role, content) {
     const msg = { role, content, id: Date.now() + Math.random() }
     setMessages(prev => [...prev, msg])
@@ -89,6 +120,7 @@ export default function Chat() {
 
     setInput('')
     setShowStravaPrompt(false)
+    setShowGarminPrompt(false)
     addMessage('user', userText)
     setLoading(true)
 
@@ -103,15 +135,25 @@ export default function Chat() {
       const reply = await sendMessage({
         messages: history,
         stravaActivities,
+        garminSleepData,
       })
 
-      if (reply.includes('[REQUEST_STRAVA_AUTH]')) {
-        const cleanReply = reply.replace('[REQUEST_STRAVA_AUTH]', '').trim()
-        addMessage('assistant', cleanReply)
-        setShowStravaPrompt(true)
-      } else {
-        addMessage('assistant', reply)
+      let cleanReply = reply
+      let shouldShowStrava = false
+      let shouldShowGarmin = false
+
+      if (cleanReply.includes('[REQUEST_STRAVA_AUTH]')) {
+        cleanReply = cleanReply.replace('[REQUEST_STRAVA_AUTH]', '').trim()
+        shouldShowStrava = true
       }
+      if (cleanReply.includes('[REQUEST_GARMIN_AUTH]')) {
+        cleanReply = cleanReply.replace('[REQUEST_GARMIN_AUTH]', '').trim()
+        shouldShowGarmin = true
+      }
+
+      addMessage('assistant', cleanReply)
+      if (shouldShowStrava) setShowStravaPrompt(true)
+      if (shouldShowGarmin) setShowGarminPrompt(true)
     } catch (err) {
       addMessage('assistant', "I'm having trouble connecting right now. Please try again in a moment.")
       console.error(err)
@@ -139,19 +181,21 @@ export default function Chat() {
     <div className={styles.page}>
       <Nav />
 
-      {stravaConnected && stravaActivities && (
+      {(stravaConnected && stravaActivities || garminConnected && garminSleepData) && (
         <div className={styles.dataBar}>
           <span className={styles.dataBarDot} />
           <span className={styles.dataBarText}>
-            Strava connected · {stravaActivities.length} recent activities loaded
+            {[stravaConnected && stravaActivities && `Strava · ${stravaActivities.length} activities`, garminConnected && garminSleepData && `Garmin · ${garminSleepData.length} nights`].filter(Boolean).join('  ·  ')}
           </span>
         </div>
       )}
 
-      {fetchingStrava && (
+      {(fetchingStrava || fetchingGarmin) && (
         <div className={styles.dataBar}>
           <span className={styles.dataBarSpinner} />
-          <span className={styles.dataBarText}>Loading your Strava data...</span>
+          <span className={styles.dataBarText}>
+            Loading {fetchingStrava ? 'Strava' : 'Garmin'} data...
+          </span>
         </div>
       )}
 
@@ -162,19 +206,40 @@ export default function Chat() {
           ))}
 
           {showStravaPrompt && !stravaConnected && (
-            <div className={`${styles.stravaCard} slide-up`}>
-              <div className={styles.stravaCardInner}>
-                <div className={styles.stravaIcon}>
+            <div className={`${styles.integrationCard} slide-up`}>
+              <div className={styles.integrationCardInner}>
+                <div className={styles.integrationIcon} style={{ background: '#FFF3ED' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116z" fill="#FC4C02" />
                     <path d="M11.094 13.828l2.089 4.116 2.204-4.116H13.12L11.094 9.828 9.066 13.828h2.028z" fill="#FC4C02" opacity="0.7" />
                   </svg>
                 </div>
-                <div className={styles.stravaCardText}>
-                  <p className={styles.stravaCardTitle}>Connect Strava</p>
-                  <p className={styles.stravaCardDesc}>I'll pull your recent activities to give you a real answer.</p>
+                <div className={styles.integrationCardText}>
+                  <p className={styles.integrationCardTitle}>Connect Strava</p>
+                  <p className={styles.integrationCardDesc}>Pull your recent training data for better insights.</p>
                 </div>
-                <button className={styles.stravaConnectBtn} onClick={handleStravaConnect}>
+                <button className={styles.integrationConnectBtn} onClick={handleStravaConnect}>
+                  Connect
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showGarminPrompt && !garminConnected && (
+            <div className={`${styles.integrationCard} slide-up`}>
+              <div className={styles.integrationCardInner}>
+                <div className={styles.integrationIcon} style={{ background: '#EBF5FF' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#007DC5" />
+                    <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" fill="#007DC5" />
+                    <circle cx="12" cy="12" r="2" fill="#007DC5" />
+                  </svg>
+                </div>
+                <div className={styles.integrationCardText}>
+                  <p className={styles.integrationCardTitle}>Connect Garmin</p>
+                  <p className={styles.integrationCardDesc}>Pull your sleep, HRV, and recovery data.</p>
+                </div>
+                <button className={styles.integrationConnectBtn} onClick={handleGarminConnect}>
                   Connect
                 </button>
               </div>

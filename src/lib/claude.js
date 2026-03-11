@@ -2,11 +2,11 @@
  * Send a message via the /api/chat Vercel serverless proxy.
  * The Anthropic API key lives only in Vercel env vars — never in the browser.
  */
-export async function sendMessage({ messages, stravaActivities = null }) {
+export async function sendMessage({ messages, stravaActivities = null, garminSleepData = null }) {
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, stravaActivities }),
+    body: JSON.stringify({ messages, stravaActivities, garminSleepData }),
   })
 
   if (!response.ok) {

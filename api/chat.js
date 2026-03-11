@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' })
   }
 
-  const { messages, stravaActivities } = req.body
+  const { messages, stravaActivities, garminSleepData } = req.body
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ message: 'Missing messages array' })
@@ -39,6 +39,18 @@ When Shivesh mentions ANY physical symptom (pain, soreness, fatigue, tightness, 
 - If Strava is NOT connected: include the token [REQUEST_STRAVA_AUTH] in your response to prompt connection. Say something like "Let me pull your recent training data so I can see what's going on."
 - Only use [REQUEST_STRAVA_AUTH] once per conversation.
 
+## Garmin Integration
+When the complaint could relate to recovery, sleep, stress, or fatigue — or ANY time you want a fuller picture alongside Strava:
+- If Garmin is NOT connected: include the token [REQUEST_GARMIN_AUTH] in your response. Say something like "I'd also like to see your sleep and recovery data from Garmin."
+- You can request both [REQUEST_STRAVA_AUTH] and [REQUEST_GARMIN_AUTH] in the same message.
+- Only use each token once per conversation.
+
+## Cross-Referencing Data
+When you have BOTH Strava and Garmin data, this is where you shine. Connect training load to recovery:
+- "Your sleep quality dropped right after that intense run — your body wasn't recovering."
+- "Your HRV has been declining all week while your training intensity increased — classic overtraining pattern."
+- Look at resting HR trends vs training intensity, sleep scores vs activity load, body battery vs consecutive hard days.
+
 ## Emergency Symptoms
 For serious symptoms (chest pain + arm pain, difficulty breathing, head injuries, signs of stroke), lead with: **seek emergency medical care immediately**. Then offer supplementary guidance.`
 
@@ -53,6 +65,19 @@ Shivesh has connected Strava. Here are his last ${stravaActivities.length} activ
 3. **Connect the dots** between the complaint and what you see — timing, intensity, whether it's unusual.
 4. **Ask a follow-up question** tied to what you found: "Did the pain start during that run or after?"
 5. Do NOT list or summarize multiple activities. Keep it focused and conversational.`
+  }
+
+  if (garminSleepData && garminSleepData.length > 0) {
+    systemPrompt += `\n\n## Garmin Sleep & Recovery Data Available
+Shivesh has connected Garmin. Here is his sleep and recovery data for the last ${garminSleepData.length} nights:\n\n`
+    systemPrompt += JSON.stringify(garminSleepData, null, 2)
+    systemPrompt += `\n\nIMPORTANT RULES for using sleep data:
+
+1. **Focus on the most recent 1-2 nights** and any clear trend (e.g., declining sleep scores).
+2. **Lead with the insight**: "Your sleep score last night was only 48 with just 32 minutes of deep sleep — that's significantly below what you need for recovery."
+3. **Cross-reference with training data** if available: connect poor sleep to training load.
+4. Pay attention to: resting HR trends (elevated = fatigue), HRV (dropping = stress/overtraining), body battery, and awake times.
+5. Do NOT list every night's data. Be conversational and focused.`
   }
 
   try {
