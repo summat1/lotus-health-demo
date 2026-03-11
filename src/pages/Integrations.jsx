@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav'
 import { isStravaConnected, getStravaAuthUrl, clearToken } from '../lib/strava'
+import { isGarminConnected, connectGarmin, disconnectGarmin } from '../lib/garmin'
 import styles from './Integrations.module.css'
 
 const INTEGRATIONS = [
@@ -19,6 +20,21 @@ const INTEGRATIONS = [
     available: true,
     comingSoon: false,
     dataPoints: ['Activities', 'Heart rate zones', 'Effort & suffer score', 'Elevation & pace'],
+  },
+  {
+    id: 'garmin',
+    name: 'Garmin',
+    description: 'Sleep stages, HRV, resting heart rate, body battery, and stress.',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#007DC5"/>
+        <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" fill="#007DC5"/>
+        <circle cx="12" cy="12" r="2" fill="#007DC5"/>
+      </svg>
+    ),
+    available: true,
+    comingSoon: false,
+    dataPoints: ['Sleep stages', 'HRV', 'Resting heart rate', 'Body battery'],
   },
   {
     id: 'apple-health',
@@ -78,23 +94,35 @@ const INTEGRATIONS = [
 ]
 
 export default function Integrations() {
-  const [stravaConnected, setStravaConnected] = useState(false)
+  const [connected, setConnected] = useState({ strava: false, garmin: false })
   const navigate = useNavigate()
 
   useEffect(() => {
-    setStravaConnected(isStravaConnected())
+    setConnected({
+      strava: isStravaConnected(),
+      garmin: isGarminConnected(),
+    })
   }, [])
 
-  function handleStravaConnect() {
-    window.location.href = getStravaAuthUrl()
+  function handleConnect(id) {
+    if (id === 'strava') {
+      window.location.href = getStravaAuthUrl()
+    } else if (id === 'garmin') {
+      connectGarmin()
+      setConnected(prev => ({ ...prev, garmin: true }))
+    }
   }
 
-  function handleStravaDisconnect() {
-    clearToken()
-    setStravaConnected(false)
+  function handleDisconnect(id) {
+    if (id === 'strava') {
+      clearToken()
+    } else if (id === 'garmin') {
+      disconnectGarmin()
+    }
+    setConnected(prev => ({ ...prev, [id]: false }))
   }
 
-  const connectedCount = stravaConnected ? 1 : 0
+  const connectedCount = Object.values(connected).filter(Boolean).length
 
   return (
     <div className={styles.page}>
@@ -119,7 +147,7 @@ export default function Integrations() {
             <div className={styles.statusBar}>
               <span className={styles.statusDot} />
               <span className={styles.statusText}>
-                {connectedCount} source connected · Syncing automatically
+                {connectedCount} {connectedCount === 1 ? 'source' : 'sources'} connected · Syncing automatically
               </span>
             </div>
           )}
@@ -127,7 +155,7 @@ export default function Integrations() {
 
         <div className={styles.grid}>
           {INTEGRATIONS.map((integration, i) => {
-            const isConnected = integration.id === 'strava' && stravaConnected
+            const isConnected = connected[integration.id] || false
 
             return (
               <div
@@ -158,7 +186,7 @@ export default function Integrations() {
                           </div>
                           <button
                             className={styles.disconnectBtn}
-                            onClick={handleStravaDisconnect}
+                            onClick={() => handleDisconnect(integration.id)}
                           >
                             Disconnect
                           </button>
@@ -166,7 +194,7 @@ export default function Integrations() {
                       ) : (
                         <button
                           className={styles.connectBtn}
-                          onClick={handleStravaConnect}
+                          onClick={() => handleConnect(integration.id)}
                         >
                           Connect
                         </button>

@@ -35,11 +35,7 @@ export default function Chat() {
   useEffect(() => {
     if (!loading) {
       const resumeMsg = health.checkOAuthResume(health.stravaActivities)
-      if (resumeMsg) {
-        handleSend(resumeMsg)
-        // If Garmin isn't connected yet, show the prompt so user can connect both
-        health.showGarminIfNeeded()
-      }
+      if (resumeMsg) handleSend(resumeMsg)
     }
   }, [health.stravaActivities])
 

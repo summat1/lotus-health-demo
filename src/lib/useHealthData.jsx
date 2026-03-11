@@ -30,7 +30,7 @@ const INTEGRATIONS = {
   garmin: {
     name: 'Garmin',
     label: 'nights',
-    token: '[REQUEST_GARMIN_AUTH]',
+    // No token — Garmin is connected from the integrations page, not prompted in chat
     color: '#EBF5FF',
     brandColor: '#007DC5',
     description: 'Pull your sleep, HRV, and recovery data.',
@@ -129,24 +129,16 @@ export function useHealthData() {
   // Parse auth tokens from AI reply and trigger prompts
   const processReply = useCallback((reply) => {
     let cleaned = reply
-    let anyTriggered = false
 
-    // Strip all tokens from the reply text
+    // Only process integrations that use chat tokens (e.g., Strava)
     Object.entries(INTEGRATIONS).forEach(([key, integration]) => {
-      if (cleaned.includes(integration.token)) {
+      if (integration.token && cleaned.includes(integration.token)) {
         cleaned = cleaned.replace(integration.token, '').trim()
-        anyTriggered = true
-      }
-    })
-
-    // If ANY integration was requested, show ALL unconnected ones
-    if (anyTriggered) {
-      Object.entries(INTEGRATIONS).forEach(([key, integration]) => {
         if (!integration.checkConnected()) {
           showPrompt(key)
         }
-      })
-    }
+      }
+    })
 
     return cleaned
   }, [showPrompt])
