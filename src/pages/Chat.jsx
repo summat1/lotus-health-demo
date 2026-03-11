@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import Nav from '../components/Nav'
 import { sendMessage } from '../lib/claude'
 import { isStravaConnected, fetchRecentActivities, getStravaAuthUrl } from '../lib/strava'
 import { isGarminConnected, connectGarmin, fetchGarminSleepData } from '../lib/garmin'
+import { analyzeHealthData } from '../lib/healthAnalysis'
 import styles from './Chat.module.css'
 
 const SUGGESTED_PROMPTS = [
@@ -47,6 +48,15 @@ export default function Chat() {
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
   const navigate = useNavigate()
+  const [dismissedAlerts, setDismissedAlerts] = useState([])
+
+  // Proactive health analysis — runs whenever data changes
+  const healthAlerts = useMemo(() => {
+    if (!stravaActivities && !garminSleepData) return []
+    return analyzeHealthData({ stravaActivities, garminSleepData })
+  }, [stravaActivities, garminSleepData])
+
+  const visibleAlerts = healthAlerts.filter(a => !dismissedAlerts.includes(a.type))
 
   useEffect(() => {
     const sConnected = isStravaConnected()
@@ -196,6 +206,37 @@ export default function Chat() {
           <span className={styles.dataBarText}>
             Loading {fetchingStrava ? 'Strava' : 'Garmin'} data...
           </span>
+        </div>
+      )}
+
+      {visibleAlerts.length > 0 && messages.length <= 1 && (
+        <div className={styles.alertsBanner}>
+          {visibleAlerts.map(alert => (
+            <button
+              key={alert.type}
+              className={`${styles.alertCard} ${styles[`alert_${alert.severity}`]} slide-up`}
+              onClick={() => {
+                setDismissedAlerts(prev => [...prev, alert.type])
+                handleSend(`I noticed a health alert: ${alert.title}. ${alert.message} Can you help me understand what's going on and what I should do?`)
+              }}
+            >
+              <div className={styles.alertIconWrap}>
+                {alert.severity === 'critical' ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                )}
+              </div>
+              <div className={styles.alertContent}>
+                <div className={styles.alertHeader}>
+                  <span className={styles.alertTitle}>{alert.title}</span>
+                  <span className={styles.alertMetric}>{alert.metric}</span>
+                </div>
+                <p className={styles.alertMessage}>{alert.message}</p>
+                <span className={styles.alertCta}>Tap to discuss with Lotus →</span>
+              </div>
+            </button>
+          ))}
         </div>
       )}
 
